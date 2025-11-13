@@ -1,48 +1,64 @@
 """
-Database Schemas
+Database Schemas for MRM Cybersecurity Hub
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model below represents a MongoDB collection. The collection
+name is the lowercase of the class name (e.g., Tool -> "tool").
 """
+from pydantic import BaseModel, Field, HttpUrl
+from typing import List, Optional, Literal
+from datetime import datetime
 
-from pydantic import BaseModel, Field
-from typing import Optional
+class Tool(BaseModel):
+    name: str = Field(..., description="Tool name")
+    description: str = Field(..., description="Short description")
+    category: Literal[
+        "Reconnaissance", "Exploitation", "Forensics", "Web Security", "Wireless", "OSINT"
+    ]
+    tags: List[str] = Field(default_factory=list)
+    popularity: int = Field(0, ge=0, description="Relative popularity score")
+    difficulty: Literal["Beginner", "Intermediate", "Advanced"] = "Beginner"
+    link: Optional[HttpUrl] = None
 
-# Example schemas (replace with your own):
+class Course(BaseModel):
+    title: str
+    thumbnail: Optional[HttpUrl] = None
+    difficulty: Literal["Beginner", "Intermediate", "Advanced"] = "Beginner"
+    slug: str
+    description: Optional[str] = None
+
+class Lab(BaseModel):
+    title: str
+    category: Literal["Beginner", "Intermediate", "Advanced"]
+    estimated_minutes: int = Field(..., ge=5, le=240)
+    link: Optional[HttpUrl] = None
+    score: int = Field(0, ge=0)
+
+class Incident(BaseModel):
+    country: str
+    type: str
+    severity: Literal["Low", "Medium", "High", "Critical"]
+    time: datetime
+    description: Optional[str] = None
+    mitre_attack_vector: Optional[str] = None
+
+class Podcast(BaseModel):
+    title: str
+    audio_url: Optional[HttpUrl] = None
+    youtube_url: Optional[HttpUrl] = None
+    guest: Optional[str] = None
+    published_at: Optional[datetime] = None
+
+class ContactMessage(BaseModel):
+    name: str
+    email: str
+    message: str
+
+class Subscriber(BaseModel):
+    email: str
+    source: Optional[str] = "website"
 
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
-
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+    name: str
+    email: str
+    password_hash: str
+    is_active: bool = True
